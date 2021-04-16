@@ -1,4 +1,4 @@
-# qubo-max-smti
+# Quantum Gate Optimisation 
 
 This project contains the experimental evaluation for QUBO-MAX-SMTI.
 
