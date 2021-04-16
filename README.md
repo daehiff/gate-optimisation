@@ -1,6 +1,6 @@
 # Quantum Gate Optimisation 
 
-This project contains the experimental evaluation for QUBO-MAX-SMTI.
+Project for Seminar-work regarding quantum-gate optimisation
 
 ## Installation
 
