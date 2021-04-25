@@ -1,3 +1,6 @@
 [submodule "optimizer"]
 	path = optimizer
 	url = https://github.com/njross/optimizer.git
+[submodule "SQIR"]
+	path = SQIR
+	url = https://github.com/inQWIRE/SQIR.git

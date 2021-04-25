@@ -13,6 +13,10 @@ qiskit = "*"
 matplotlib = "*"
 pylatexenc = "*"
 pytket = "*"
+qfast = "*"
+cirq = "*"
+interop = "*"
+gmpy2 = "*"
 
 [requires]
 python_version = "3.7"
