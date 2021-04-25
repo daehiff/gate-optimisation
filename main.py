@@ -11,9 +11,6 @@ from qiskit import QuantumCircuit, Aer, execute, transpile
 from qiskit.circuit import Gate
 
 from SQIR.VOQC.interop import SQIR
-from SQIR.VOQC.interop.cirq.decompose_cirq_gates import decompose_library, need_to_keep
-from SQIR.VOQC.interop.exceptions import InvalidVOQCFunction
-from SQIR.VOQC.interop.formatting import rzq_to_rz
 
 
 def main():
