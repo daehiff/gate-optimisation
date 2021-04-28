@@ -1,18 +1,6 @@
-import math
-
-import numpy as np
-import pyzx as zx
-import pandas as pd
-import qfast
 from qiskit import QuantumCircuit, Aer, execute, transpile
 from qiskit.circuit import Gate
-from qiskit.circuit.library import RXGate, RYGate
-from qiskit.circuit.random import random_circuit
 from qiskit.converters import circuit_to_dag
-from qiskit.quantum_info import Clifford
-import matplotlib.pyplot as plt
-import pytket as pk
-from SQIR.VOQC.interop.voqc import SQIR
 
 
 def net_entry(gate: Gate, position):

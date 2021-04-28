@@ -83,7 +83,6 @@ def are_non_zeros_clifford(matrix: np.array):
 
 
 def generate_pauli(j: int, n: int, p_type="x"):
-    # TODO this needs some testing for n > 2 and verification for n<=2
     assert p_type == "x" or p_type == "z"
     pauli_x = np.asarray([[0.0, 1.0], [1.0, 0.0]])
     pauli_z = np.asarray([[1.0, 0.0], [0.0, -1.0]])
