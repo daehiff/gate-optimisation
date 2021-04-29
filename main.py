@@ -14,8 +14,14 @@ import subprocess
 from SQIR.VOQC.interop import SQIR
 from utils import to_qc_format
 
+AER_BACKEND = Aer.get_backend('unitary_simulator')
+
 
 def main():
+    random_evaluation()
+
+
+def random_evaluation():
     qc = generate_random_circuit(4, 20)
     # qc = transpile(qc, basis_gates=["h", "cx", "p", "t"])
     get_circuit_stats(qc, verbose=True)
@@ -25,8 +31,8 @@ def main():
     get_circuit_stats(tpar_circ, verbose=True)
 
     print("Evaluating VOQC")
-    # voqc_circ = voqc_evaluation(qc)
-    # get_circuit_stats(voqc_circ, verbose=True)
+    voqc_circ = voqc_evaluation(qc)
+    get_circuit_stats(voqc_circ, verbose=True)
 
     print("Evaluating QFast")
     qc_qfast = q_fast_evaluation(qc)
@@ -54,7 +60,7 @@ def tpar_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     result = result.stdout.decode("utf-8")
     if "ERROR" in result:
         raise Exception(f"t-par couldn't parse the circuit: {result}")
-    zx_circ = zx.Circuit.from_qc(result)
+    zx_circ = zx.Circuit.from_qc(result).to_basic_gates().split_phase_gates()
     return zx_circuit_to_qiskit_circuit(zx_circ)
 
 
@@ -66,7 +72,9 @@ def voqc_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     """
     with open("SQIR/VOQC/temp.qasm", "w") as f:
         f.write(circ.qasm())
-    out_circ = QuantumCircuit.from_qasm_str(SQIR(fname="temp.qasm").optimize().write_str())
+    out_circ = QuantumCircuit.from_qasm_str(SQIR(fname="temp.qasm").optimize().write_str()).decompose()
+    out_circ = qiskit_circuit_to_zx_circuit(out_circ).to_basic_gates().split_phase_gates()
+    out_circ = zx_circuit_to_qiskit_circuit(out_circ)
     os.remove("SQIR/VOQC/temp.qasm")
     return out_circ
 
@@ -77,10 +85,10 @@ def q_fast_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     :param circ:
     :return:, 0
     """
-    job = execute(circ, Aer.get_backend('unitary_simulator'))
-    circ_unitary = job.result().get_unitary(circ)
-    circ = QuantumCircuit.from_qasm_str(qfast.synthesize(circ_unitary))
-    return circ
+    circ_ = qiskit_circuit_to_zx_circuit(circ)
+    circ_ = qiskit_circuit_to_zx_circuit(QuantumCircuit.from_qasm_str(qfast.synthesize(circ_.to_matrix())))
+    circ_ = circ_.to_basic_gates().split_phase_gates()
+    return zx_circuit_to_qiskit_circuit(circ_)
 
 
 def pyzx_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
@@ -94,7 +102,7 @@ def pyzx_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     """
     c_graph = qiskit_circuit_to_zx_circuit(circ).to_graph()
     zx.simplify.full_reduce(c_graph)
-    cir_reduced = zx.extract_circuit(c_graph)
+    cir_reduced = zx.extract_circuit(c_graph).to_basic_gates().split_phase_gates()
     return zx_circuit_to_qiskit_circuit(cir_reduced)
 
 
@@ -130,6 +138,8 @@ def generate_pauli(j: int, n: int, p_type="x"):
 
 
 def is_clifford(gate: Gate):
+    if not hasattr(gate, "__array__"):
+        print(gate.name)
     gate_unitary = gate.to_matrix()
     for j in range(gate.num_qubits):
         pauli_x_j = generate_pauli(j, gate.num_qubits, p_type="x")
