@@ -4,3 +4,6 @@
 [submodule "SQIR"]
 	path = SQIR
 	url = https://github.com/inQWIRE/SQIR.git
+[submodule "t-par"]
+	path = t-par
+	url = https://github.com/meamy/t-par.git

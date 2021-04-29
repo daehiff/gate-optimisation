@@ -9,19 +9,24 @@ from cirq import circuits, Circuit, decompose
 from cirq.contrib.qasm_import import circuit_from_qasm
 from qiskit import QuantumCircuit, Aer, execute, transpile
 from qiskit.circuit import Gate
+import subprocess
 
 from SQIR.VOQC.interop import SQIR
+from utils import to_qc_format
 
 
 def main():
-    qc = generate_random_circuit(3, 10)
+    qc = generate_random_circuit(4, 20)
     # qc = transpile(qc, basis_gates=["h", "cx", "p", "t"])
-
     get_circuit_stats(qc, verbose=True)
 
+    print("Evaluating T-par")
+    tpar_circ = tpar_evaluation(qc)
+    get_circuit_stats(tpar_circ, verbose=True)
+
     print("Evaluating VOQC")
-    voqc_circ = sqir_evaluation(qc)
-    get_circuit_stats(voqc_circ, verbose=True)
+    # voqc_circ = voqc_evaluation(qc)
+    # get_circuit_stats(voqc_circ, verbose=True)
 
     print("Evaluating QFast")
     qc_qfast = q_fast_evaluation(qc)
@@ -32,10 +37,35 @@ def main():
     get_circuit_stats(qc_pyzx, verbose=True)
 
 
-def sqir_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
+def tpar_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
+    """
+    Evaluation of the t-par algorithm by Amy et. al.
+
+    :param circ:
+    :return:
+    """
+    out = to_qc_format(circ, replace_S=True)
+    with open("temp.qc", "w") as f:
+        f.write(out)
+
+    result = subprocess.run("t-par/t-par < temp.qc", stdout=subprocess.PIPE, shell=True)
+    result.check_returncode()
+    os.remove("temp.qc")
+    result = result.stdout.decode("utf-8")
+    if "ERROR" in result:
+        raise Exception(f"t-par couldn't parse the circuit: {result}")
+    zx_circ = zx.Circuit.from_qc(result)
+    return zx_circuit_to_qiskit_circuit(zx_circ)
+
+
+def voqc_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
+    """
+    Executes VOQC by its python wrapper
+    :param circ:
+    :return:
+    """
     with open("SQIR/VOQC/temp.qasm", "w") as f:
-        # yes this is horror, but it works since SQIR cannot read rx gates... :D
-        f.write(zx.circuit.Circuit.from_graph(circuit_to_graph(circ)).to_basic_gates().split_phase_gates().to_qasm())
+        f.write(circ.qasm())
     out_circ = QuantumCircuit.from_qasm_str(SQIR(fname="temp.qasm").optimize().write_str())
     os.remove("SQIR/VOQC/temp.qasm")
     return out_circ
@@ -62,10 +92,10 @@ def pyzx_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     :param circ:
     :return:
     """
-    c_graph = circuit_to_graph(circ)
+    c_graph = qiskit_circuit_to_zx_circuit(circ).to_graph()
     zx.simplify.full_reduce(c_graph)
     cir_reduced = zx.extract_circuit(c_graph)
-    return graph_to_circuit(cir_reduced.to_graph())
+    return zx_circuit_to_qiskit_circuit(cir_reduced)
 
 
 def are_non_zeros_clifford(matrix: np.array):
@@ -161,23 +191,40 @@ def get_circuit_stats(circ: QuantumCircuit, verbose=False) -> [int, int, int, in
     return clifford_count, non_clifford, two_qubit_count, overall_gate_count, depth
 
 
-def graph_to_circuit(graph: zx.Graph) -> QuantumCircuit:
-    return QuantumCircuit.from_qasm_str(zx.circuit.Circuit.from_graph(graph).to_qasm())
+def zx_circuit_to_qiskit_circuit(circuit: zx.Circuit) -> QuantumCircuit:
+    """
+    Compability Qiskit <=> pyzx via qasm
+    :param circuit:
+    :return:
+    """
+    return QuantumCircuit.from_qasm_str(circuit.to_qasm())
 
 
-def circuit_to_graph(circ: QuantumCircuit) -> zx.Graph:
-    return zx.Circuit.from_qasm(circ.qasm()).to_graph()
+def qiskit_circuit_to_zx_circuit(circ: QuantumCircuit) -> zx.Circuit:
+    """
+    Compability Qiskit <=> pyzx via qasm
+    :param circ:
+    :return:
+    """
+    return zx.Circuit.from_qasm(circ.qasm())
 
 
 def generate_random_circuit(qubit_count, gate_count) -> QuantumCircuit:
     """
-    Generates a random circuit consiting only out of Clifford + T gates
+    Generates a RANDOM Clifford+T gateset, with the following gates in it:
+        {"h", "cx", "x", "y", "z", "s", "t", "sdg", "tdg"}
+    By removing x, y, z this would be a universal generator for every quantum circuit
+
+    TODO more parameters? w.r.t gates ect.?
     :param qubit_count:
     :param gate_count:
     :return:
     """
-    circuit = zx.generate.cliffordT(qubit_count, gate_count)
-    return graph_to_circuit(circuit)
+    circuit = zx.Circuit.from_graph(zx.generate.cliffordT(qubit_count, gate_count)).to_basic_gates().split_phase_gates()
+    circuit = zx_circuit_to_qiskit_circuit(circuit)
+    for gate, _, _ in circuit.data:
+        assert gate.name in {"h", "cx", "x", "y", "z", "s", "t", "sdg", "tdg"}
+    return circuit
 
 
 if __name__ == '__main__':
