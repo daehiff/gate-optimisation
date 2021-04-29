@@ -8,11 +8,14 @@ from qiskit.converters import circuit_to_dag
 from qiskit.quantum_info import Statevector
 
 import numpy as np
+import pyzx as zx
 
 # TODO assert, that the gates are all represented by this set of instructions
 # TODO write access functions for that (maybe in general in order to keep gate reduction consistent)
 
 # official instruction set => changed the p from Amy et. al. to s according to qiskit
+from main import qiskit_circuit_to_zx_circuit, zx_circuit_to_qiskit_circuit, generate_random_circuit
+
 INTRUCTION_SET = ["h", "cx", "rx", "ry", "rz", "s", "sdg", "t", "tdg"]
 
 # internal instruction set => seperation between control and x
@@ -165,6 +168,16 @@ def find_intersection_with_current(s_i, unitary: QuantumCircuit):
 
 
 def is_circuit_equal(qc_1: QuantumCircuit, qc_2: QuantumCircuit):
+    unitary_1 = qiskit_circuit_to_zx_circuit(qc_1)
+    unitary_2 = qiskit_circuit_to_zx_circuit(qc_2)
+    unitary_1.add_circuit(unitary_2.adjoint())
+    unitary_1 = unitary_1.to_graph()
+    zx.simplify.full_reduce(unitary_1)
+    cir_reduced = zx.extract_circuit(unitary_1)
+    return len(cir_reduced.gates) == 0
+
+
+def is_circuit_equal_slow(qc_1: QuantumCircuit, qc_2: QuantumCircuit):
     unitary_1 = circuit_to_unitary(qc_1)
     unitary_2 = circuit_to_unitary(qc_2)
     return np.allclose(unitary_1, unitary_2)

@@ -17,6 +17,7 @@ qfast = "*"
 cirq = "*"
 interop = "*"
 gmpy2 = "*"
+pytket-qiskit = "*"
 
 [requires]
 python_version = "3.7"
