@@ -21,6 +21,7 @@ interop = "*"
 gmpy2 = "*"
 coverage = "*"
 qfast-uq = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.7"

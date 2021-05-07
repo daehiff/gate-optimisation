@@ -29,7 +29,7 @@ def tket_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     tketpass.apply(cu)
     res_circ = zx.Circuit.from_qasm(circuit_to_qasm_str(cu.circuit)).split_phase_gates()
     circ_out = zx_circuit_to_qiskit_circuit(res_circ)
-    assert verify_equality(circ, circ_out)
+    # assert verify_equality(circ, circ_out)
     return circ_out
 
 
@@ -44,7 +44,7 @@ def qiskit_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     return circuit_out
 
 
-def tpar_evaluation(circ: QuantumCircuit, root_dir: str) -> QuantumCircuit:
+def tpar_evaluation(circ: QuantumCircuit, root_dir: str = "") -> QuantumCircuit:
     """
     Evaluation of the t-par algorithm by Amy et. al.
 
@@ -117,7 +117,7 @@ def pyzx_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     zx.simplify.full_reduce(c_graph)
     cir_reduced = zx.extract_circuit(c_graph).split_phase_gates().to_basic_gates()
     circ_out = zx_circuit_to_qiskit_circuit(cir_reduced)
-    circ_out = convert_clifford_t(circ_out)
+    # circ_out = convert_clifford_t(circ_out)
     assert verify_equality(circ, circ_out)
     return circ_out
 
@@ -137,4 +137,4 @@ def circuit_to_unitary(qc: QuantumCircuit) -> np.array:
 def verify_equality(qc_in: QuantumCircuit, qc_out: QuantumCircuit):
     qc_in_ = qiskit_circuit_to_zx_circuit(qc_in)
     qc_out_ = qiskit_circuit_to_zx_circuit(qc_out)
-    return qc_in_.verify_equality(qc_out_, up_to_swaps=True)  # and is_clifford_t(qc_out)
+    return qc_in_.verify_equality(qc_out_)  # and is_clifford_t(qc_out)

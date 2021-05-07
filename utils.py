@@ -12,7 +12,7 @@ import warnings
 
 from qiskit.circuit import Gate
 
-CLIFFORD_T_SET = {"h", "cx", "x", "y", "z", "s", "t", "sdg", "tdg", "u", "u3"}
+CLIFFORD_T_SET = {"h", "cx", "x", "y", "z", "s", "t", "sdg", "tdg"}
 CLIFFORD_T_SET_TKET = [OpType.H, OpType.CX, OpType.X, OpType.Y, OpType.Z, OpType.S, OpType.T, OpType.Sdg, OpType.Tdg]
 
 
