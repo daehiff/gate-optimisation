@@ -3,17 +3,30 @@ import numpy as np
 import pyzx as zx
 import qfast
 import subprocess
-from pytket._tket.passes import FullPeepholeOptimise, RebasePyZX
+from pytket._tket.passes import FullPeepholeOptimise, RebasePyZX, RebaseIBM
 from pytket.qasm import circuit_from_qasm_str, circuit_to_qasm_str
 from pytket._tket.predicates import CompilationUnit
 from qiskit import QuantumCircuit, execute, BasicAer
 
 from qiskit.compiler import transpile
 from SQIR.VOQC.interop import SQIR
-from utils import zx_circuit_to_qiskit_circuit, CLIFFORD_T_SET, qiskit_circuit_to_zx_circuit, to_qc_format, \
-    is_clifford_t, convert_clifford_t, generate_random_circuit
+from utils import zx_circuit_to_qiskit_circuit, CLIFFORD_T_SET, qiskit_circuit_to_zx_circuit, to_qc_format
 
 UNITARY_BACKEND = BasicAer.get_backend('unitary_simulator')
+
+
+def rebase_gates_ibm(circ: QuantumCircuit) -> QuantumCircuit:
+    """
+    Helper function to rebase the circuits to IBM gate set
+
+    :param circ:
+    :return:
+    """
+    cu = CompilationUnit(circuit_from_qasm_str(circ.qasm()))
+    rebase_ibm = RebaseIBM()
+    rebase_ibm.apply(cu)
+    circ_out = QuantumCircuit.from_qasm_str(circuit_to_qasm_str(cu.circuit))
+    return circ_out
 
 
 def tket_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
@@ -25,8 +38,8 @@ def tket_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     tketpass = FullPeepholeOptimise()
     refine_circs = RebasePyZX()
     cu = CompilationUnit(circuit_from_qasm_str(circ.qasm()))
-    refine_circs.apply(cu)
     tketpass.apply(cu)
+    refine_circs.apply(cu)
     res_circ = zx.Circuit.from_qasm(circuit_to_qasm_str(cu.circuit)).split_phase_gates()
     circ_out = zx_circuit_to_qiskit_circuit(res_circ)
     # assert verify_equality(circ, circ_out)

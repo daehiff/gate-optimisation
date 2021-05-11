@@ -13,7 +13,6 @@ import warnings
 from qiskit.circuit import Gate
 
 CLIFFORD_T_SET = {"h", "cx", "x", "y", "z", "s", "t", "sdg", "tdg"}
-CLIFFORD_T_SET_TKET = [OpType.H, OpType.CX, OpType.X, OpType.Y, OpType.Z, OpType.S, OpType.T, OpType.Sdg, OpType.Tdg]
 
 
 def are_non_zeros_clifford(matrix: np.array):
@@ -95,7 +94,6 @@ def get_circuit_stats(circ: QuantumCircuit, verbose=False) -> [int, int, int, in
     :param verbose: verbose the information instead of just returning it
     :param circ: circuit one wants to evaluate the statistics
     :return: list, consisting of: clifford_count, t_count, two_qubit_count, overall_gate_count, depth
-    TODO test correctness by example with all possible gates
     """
     clifford_t = is_clifford_t(circ)
     depth = circ.depth()
@@ -104,6 +102,7 @@ def get_circuit_stats(circ: QuantumCircuit, verbose=False) -> [int, int, int, in
     one_qubit_count = 0
     two_qubit_count = 0
     n_qubit_count = 0
+    gate_set = set([gate.name for gate, _, _ in circ.data])
     overall_gate_count = len(circ.data)
     for instr, a, b in circ.data:
         if is_clifford(instr):
@@ -131,6 +130,8 @@ def get_circuit_stats(circ: QuantumCircuit, verbose=False) -> [int, int, int, in
         Overall:            {overall_gate_count}
         ---
         Depth:              {depth}
+        ---
+        Gateset:            {gate_set}
         """)
     return clifford_count, non_clifford, two_qubit_count, overall_gate_count, depth
 
@@ -153,15 +154,23 @@ def qiskit_circuit_to_zx_circuit(circ: QuantumCircuit) -> zx.Circuit:
     return zx.Circuit.from_qasm(circ.qasm())
 
 
-def generate_random_circuit(qubit_count, gate_count) -> QuantumCircuit:
+def generate_random_circuit(qubit_count, gate_count, p_t=None, p_s=None, p_hsh=None, p_cnot=None) -> QuantumCircuit:
     """
     Generates a RANDOM Clifford+T gateset, with the following gates in it:
-        {"h", "cx", "x", "y", "z", "s", "t", "sdg", "tdg"}
+
+    :param p_cnot:
+    :param p_hsh:
+    :param p_s:
+    :param p_t:
     :param qubit_count:
     :param gate_count:
     :return:
     """
-    circuit = zx.Circuit.from_graph(zx.generate.cliffordT(qubit_count, gate_count)).to_basic_gates().split_phase_gates()
+    circuit = zx.Circuit.from_graph(zx.generate.cliffordT(qubit_count, gate_count,
+                                                          p_t=p_t,
+                                                          p_s=p_s,
+                                                          p_hsh=p_hsh,
+                                                          p_cnot=p_cnot)).to_basic_gates().split_phase_gates()
     circuit = zx_circuit_to_qiskit_circuit(circuit)
     for gate, _, _ in circuit.data:
         assert gate.name in CLIFFORD_T_SET
@@ -198,51 +207,6 @@ def to_qc_format(circ: QuantumCircuit, replace_s=False) -> str:
     return qc
 
 
-@DeprecationWarning
-def circuit_to_unitary(qc: QuantumCircuit):
-    backend = BasicAer.get_backend('unitary_simulator')
-    job = execute(qc, backend)
-    return job.result().get_unitary(qc, decimals=3)
-
-
-def RX(angle):
-    return np.asarray([
-        [math.cos(angle / 2.0), -1.j * math.sin(angle / 2.0)],
-        [-1.j * math.sin(angle / 2.0), math.cos(angle / 2.0)]
-    ])
-
-
-def RZ(angle):
-    return np.asarray([
-        [np.exp(-1.j * angle / 2.0), 0.0],
-        [0.0, np.exp(1.j * angle / 2.0)]
-    ])
-
-
-def verify_equalities():
-    H = 1 / math.sqrt(2) * np.asarray([[1.0, 1.0], [1.0, -1.0]])
-    X = np.asarray([[0.0, 1.0], [1.0, 0.0]])
-
-    qc1 = QuantumCircuit(1)
-    # qc1.cz(0, 1)
-    theta, phi, lam = math.pi / 2.0, math.pi / 2.0, math.pi / 2.0
-    qc1.u(theta, phi, lam, 0)
-    qc = convert_clifford_t(qc1)
-
-    print(qc1)
-    print(qc)
-
-    qc1_u = np.asarray([
-        [math.cos(theta / 2.0), -np.exp(1.j * lam) * math.sin(theta / 2.0)],
-        [np.exp(phi * 1.j) * math.sin(theta / 2.0), np.exp(1.j * lam + 1.j * phi) * math.cos(theta / 2.0)]
-    ])
-    print("Expected")
-    print(qc1_u)
-
-    print("out")
-    print(circuit_to_unitary(qc))
-
-
 def convert_clifford_t(qc: QuantumCircuit):
     """
     Given a circuit which is output by Qfast or pyzx to clifford+T set
@@ -266,8 +230,3 @@ def convert_clifford_t(qc: QuantumCircuit):
         else:
             raise Exception(f"Not a viable implementation to clifford+t: {gate.name}")
     return out
-
-
-if __name__ == '__main__':
-    verify_equalities()
-    # test_qc_formatter()

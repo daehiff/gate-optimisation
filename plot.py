@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from qiskit import QuantumCircuit
 
 ALGORITHMS = ["tket", "qiskit", "tpar", "voqc", "qfast", "pyzx"]
 
@@ -14,19 +15,18 @@ def main():
     # print(df)
 
 
+
 def plot_num_gates(df):
     df_default = df.groupby(["algorithm", "circ_num_gates"], as_index=False).mean()
     df_default = df_default[df_default["algorithm"].str.match("default")]
     print(df_default)
     df_default = pd.concat([df_default] * 7, ignore_index=True)
-    del df_default["idx"]
     del df_default["algorithm"]
 
     df_ = df.groupby(["algorithm", "circ_num_gates"], as_index=False).mean()
     algorithm = df_["algorithm"]
     circ_num_gates = df_["circ_num_gates"]
     del df_["algorithm"]
-    del df_["idx"]
     df_ = df_ - df_default
     df_["circ_num_gates"] = circ_num_gates
     df_["algorithm"] = algorithm
@@ -40,3 +40,4 @@ def plot_num_gates(df):
 
 if __name__ == '__main__':
     main()
+
