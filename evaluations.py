@@ -3,6 +3,7 @@ import numpy as np
 import pyzx as zx
 import qfast
 import subprocess
+import logging as log
 from pytket._tket.passes import FullPeepholeOptimise, RebasePyZX, RebaseIBM
 from pytket.qasm import circuit_from_qasm_str, circuit_to_qasm_str
 from pytket._tket.predicates import CompilationUnit
@@ -35,6 +36,7 @@ def tket_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     :param circ:
     :return:
     """
+    log.warning("Evaluating tket")
     tketpass = FullPeepholeOptimise()
     refine_circs = RebasePyZX()
     cu = CompilationUnit(circuit_from_qasm_str(circ.qasm()))
@@ -43,6 +45,7 @@ def tket_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     res_circ = zx.Circuit.from_qasm(circuit_to_qasm_str(cu.circuit)).split_phase_gates()
     circ_out = zx_circuit_to_qiskit_circuit(res_circ)
     # assert verify_equality(circ, circ_out)
+    log.warning("Done!")
     return circ_out
 
 
@@ -52,8 +55,10 @@ def qiskit_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     :param circ:
     :return:
     """
+    log.warning("Evaluating qiskit")
     circuit_out = transpile(circ, basis_gates=list(CLIFFORD_T_SET))
     assert verify_equality(circ, circuit_out)
+    log.warning("Done")
     return circuit_out
 
 
@@ -65,6 +70,7 @@ def tpar_evaluation(circ: QuantumCircuit, root_dir: str = "") -> QuantumCircuit:
     :param circ:
     :return:
     """
+    log.warning("Evaluating t-par")
     out = to_qc_format(circ, replace_s=True)
     with open("temp.qc", "w") as f:
         f.write(out)
@@ -78,6 +84,7 @@ def tpar_evaluation(circ: QuantumCircuit, root_dir: str = "") -> QuantumCircuit:
     zx_circ = zx.Circuit.from_qc(result).to_basic_gates().split_phase_gates()
     circ_out = zx_circuit_to_qiskit_circuit(zx_circ)
     assert verify_equality(circ, circ_out)
+    log.warning("done")
     return circ_out
 
 
@@ -88,6 +95,7 @@ def voqc_evaluation(circ: QuantumCircuit, root_dir: str = "") -> QuantumCircuit:
     :param circ:
     :return:
     """
+    log.warning("Evaluating voqc")
     with open(root_dir + "SQIR/VOQC/temp.qasm", "w") as f:
         f.write(circ.qasm())
     out_circ = QuantumCircuit.from_qasm_str(SQIR(fname="temp.qasm").optimize().write_str()).decompose()
@@ -95,6 +103,7 @@ def voqc_evaluation(circ: QuantumCircuit, root_dir: str = "") -> QuantumCircuit:
     out_circ = zx_circuit_to_qiskit_circuit(out_circ)
     assert verify_equality(circ, out_circ)
     os.remove(root_dir + "SQIR/VOQC/temp.qasm")
+    log.warning("Done")
     return out_circ
 
 
@@ -110,10 +119,11 @@ def q_fast_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     :param circ:
     :return:, 0
     """
-
+    log.warning("Evaluating Qfast")
     unitary = qiskit_circuit_to_zx_circuit(circ).to_matrix().astype(dtype=np.complex128)
     circ_qasm = qfast.synthesize(unitary)
     circ_ = QuantumCircuit.from_qasm_str(circ_qasm)
+    log.warning("Done")
     return circ_
 
 
@@ -126,12 +136,14 @@ def pyzx_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     :param circ:
     :return:
     """
+    log.warning("Evaluating pyzx")
     c_graph = qiskit_circuit_to_zx_circuit(circ).to_graph()
     zx.simplify.full_reduce(c_graph)
     cir_reduced = zx.extract_circuit(c_graph).split_phase_gates().to_basic_gates()
     circ_out = zx_circuit_to_qiskit_circuit(cir_reduced)
     # circ_out = convert_clifford_t(circ_out)
     assert verify_equality(circ, circ_out)
+    log.warning("done")
     return circ_out
 
 
