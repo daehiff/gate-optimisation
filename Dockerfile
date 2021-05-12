@@ -1,6 +1,5 @@
 FROM ocaml/opam
 
-
 # System wide dependencies gcc, python 3.7, pip and Boost
 RUN sudo apt-get update
 RUN sudo apt-get install libgmp-dev -y
@@ -17,19 +16,20 @@ WORKDIR /code
 RUN sudo chmod -R 777 .
 
 # t-par deps setup
+
 WORKDIR /code/t-par
 RUN make clean && make all
 
-
 # VOQC setup
-WORKDIR /code
-WORKDIR /code/SQIR/VOQC
-
-RUN opam init
+WORKDIR /code/SQIR
+RUN opam init --yes
 RUN opam switch create voqc 4.10.0
 RUN opam install dune zarith batteries openQASM
+RUN  eval $(opam env)
 WORKDIR /code/SQIR
 RUN make voqc
+WORKDIR /code/SQIR/VOQC
+RUN eval $(opam env) && dune build extraction/libvoqc.so
 
 
 # General python setup
