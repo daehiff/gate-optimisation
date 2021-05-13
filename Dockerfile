@@ -18,7 +18,7 @@ RUN sudo chmod -R 777 .
 # t-par deps setup
 
 WORKDIR /code/t-par
-RUN make clean && make all
+RUN make all
 
 # VOQC setup
 WORKDIR /code/SQIR
@@ -27,7 +27,7 @@ RUN opam switch create voqc 4.10.0
 RUN opam install dune zarith batteries openQASM
 RUN  eval $(opam env)
 WORKDIR /code/SQIR
-RUN make voqc
+RUN eval $(opam env) && make voqc
 WORKDIR /code/SQIR/VOQC
 RUN eval $(opam env) && dune build extraction/libvoqc.so
 
