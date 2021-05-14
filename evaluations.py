@@ -1,9 +1,12 @@
 import os
+import time
+
 import numpy as np
 import pyzx as zx
 import qfast
 import subprocess
 import logging as log
+import mitm
 from pytket._tket.passes import FullPeepholeOptimise, RebasePyZX, RebaseIBM
 from pytket.qasm import circuit_from_qasm_str, circuit_to_qasm_str
 from pytket._tket.predicates import CompilationUnit
@@ -28,6 +31,17 @@ def rebase_gates_ibm(circ: QuantumCircuit) -> QuantumCircuit:
     rebase_ibm.apply(cu)
     circ_out = QuantumCircuit.from_qasm_str(circuit_to_qasm_str(cu.circuit))
     return circ_out
+
+
+def mitm_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
+    unitary = qiskit_circuit_to_zx_circuit(circ).to_matrix().astype(dtype=np.complex128)
+    start = time.time()
+    qc_string = mitm.mitm_algorithm(unitary, 7, 1, True)
+    print(time.time() - start)
+    if qc_string == "":
+        return None
+    circ = zx_circuit_to_qiskit_circuit(zx.Circuit.from_qc(qc_string))
+    return circ
 
 
 def tket_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
