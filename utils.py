@@ -207,6 +207,7 @@ def to_qc_format(circ: QuantumCircuit, replace_s=False) -> str:
     return qc
 
 
+
 def convert_clifford_t(qc: QuantumCircuit):
     """
     Given a circuit which is output by Qfast or pyzx to clifford+T set
