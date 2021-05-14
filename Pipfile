@@ -13,15 +13,14 @@ qiskit = "*"
 matplotlib = "*"
 pylatexenc = "*"
 pytket = "*"
-pytket-qiskit = "*"
 qfast = "*"
-qfast-qiskit = "*"
 cirq = "*"
 interop = "*"
 gmpy2 = "*"
 coverage = "*"
 qfast-uq = "*"
 seaborn = "*"
+mitm-algorithm = {path = "./mitm-reimplementation"}
 
 [requires]
 python_version = "3.7"
