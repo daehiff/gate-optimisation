@@ -9,4 +9,4 @@
 	url = https://github.com/meamy/t-par.git
 [submodule "mitm-reimplementation"]
 	path = mitm-reimplementation
-	url = git@github.com:daehiff/mitm-reimplementation.git
+	url = https://github.com/daehiff/mitm-reimplementation.git
