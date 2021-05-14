@@ -36,7 +36,7 @@ def rebase_gates_ibm(circ: QuantumCircuit) -> QuantumCircuit:
 def mitm_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     unitary = qiskit_circuit_to_zx_circuit(circ).to_matrix().astype(dtype=np.complex128)
     start = time.time()
-    qc_string = mitm.mitm_algorithm(unitary, 7, 1, True)
+    qc_string = mitm.mitm_algorithm(unitary, 10, 1, True)
     print(time.time() - start)
     if qc_string == "":
         return None
