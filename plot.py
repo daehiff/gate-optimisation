@@ -14,28 +14,32 @@ def main():
 
 
 def plot_default():
-    df = pd.read_csv("data/default/gate_count.csv")
+    df = pd.read_csv("data/rebase/gate_count.csv")
     plot_by_metric(df, metric="circ_num_gates")
+
+    df = pd.read_csv("data/rebase/num_qubits.csv")
+    plot_by_metric(df, metric="circ_q_count")
 
 
 def plot_by_metric(df, metric="circ_num_gates"):
-    df_default = df.groupby(["algorithm", metric], as_index=False).mean()
-    df_default = df_default[df_default["algorithm"].str.match("default")]
-    print(df_default)
-    df_default = pd.concat([df_default] * 7, ignore_index=True)
+    df_default = df[df["algorithm"].str.match("default")]
+    df_default = pd.DataFrame(np.repeat(df_default.values, 7, axis=0), columns=df_default.columns)
+    del df_default["Unnamed: 0"]
+    del df["Unnamed: 0"]
+    alg = df["algorithm"]
+    metric_ = df[metric]
     del df_default["algorithm"]
-
-    df_ = df.groupby(["algorithm", metric], as_index=False).mean()
-    algorithm = df_["algorithm"]
-    circ_num_gates = df_[metric]
-    del df_["algorithm"]
-    df_ = df_ - df_default
-    df_[metric] = circ_num_gates
-    df_["algorithm"] = algorithm
-
+    del df_default["circuit"]
+    del df["algorithm"]
+    del df["circuit"]
+    df_ = df - df_default
+    df_ = df_.astype(np.float64)
+    df_["algorithm"] = alg
+    df_[metric] = metric_
+    df_ = df_[~df_["algorithm"].str.match("default")]
+    df_ = df_[~df_["algorithm"].str.match("qfast")]
     for comparison_column in COMPARISONS:
-        df_plot = df_
-        sns.barplot(x=metric, hue="algorithm", y=comparison_column, data=df_plot)
+        sns.barplot(x=metric, hue="algorithm", y=comparison_column, data=df_, errwidth=1, capsize=0.1)
         plt.title(f"Comparison against: {comparison_column}")
         plt.show()
 
