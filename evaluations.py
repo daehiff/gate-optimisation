@@ -58,7 +58,7 @@ def tket_evaluation(circ: QuantumCircuit) -> QuantumCircuit:
     refine_circs.apply(cu)
     res_circ = zx.Circuit.from_qasm(circuit_to_qasm_str(cu.circuit)).split_phase_gates()
     circ_out = zx_circuit_to_qiskit_circuit(res_circ)
-    # assert verify_equality(circ, circ_out)
+    assert verify_equality(circ, circ_out)
     log.warning("Done!")
     return circ_out
 

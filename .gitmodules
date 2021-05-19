@@ -10,3 +10,6 @@
 [submodule "mitm-reimplementation"]
 	path = mitm-reimplementation
 	url = https://github.com/daehiff/mitm-reimplementation.git
+[submodule "qtoolkit"]
+	path = qtoolkit
+	url = https://github.com/nelimee/qtoolkit.git

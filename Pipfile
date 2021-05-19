@@ -21,6 +21,7 @@ coverage = "*"
 qfast-uq = "*"
 seaborn = "*"
 mitm-algorithm = {path = "./mitm-reimplementation"}
+qtoolkit = {path = "./qtoolkit"}
 
 [requires]
 python_version = "3.7"
