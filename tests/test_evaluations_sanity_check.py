@@ -1,8 +1,17 @@
 import random
 import unittest
 from evaluations import *
-from main import NAME_EVALUATION
 from utils import *
+
+NAME_EVALUATION = {
+    "default": lambda x: x,
+    "tket": tket_evaluation,
+    "qiskit": qiskit_evaluation,
+    "tpar": tpar_evaluation,
+    "voqc": voqc_evaluation,
+    "qfast": q_fast_evaluation,
+    "pyzx": pyzx_evaluation,
+}
 
 
 class TestSanity(unittest.TestCase):
