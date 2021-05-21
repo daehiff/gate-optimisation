@@ -74,12 +74,12 @@ def plot_by_metric(df, metric="circ_num_gates", include_qfast=True, save=True, c
         df_ = df_[~df_["algorithm"].str.match("qfast")]
     for comparison_column in COMPARISONS:
         sns.barplot(x=metric, hue="algorithm", y=comparison_column, data=df_, errwidth=1, capsize=0.1)
-        plt.title(f"Metric: {comparison_column}")
+        plt.title(f"{comparison_column}")
         if save:
             if not os.path.exists(f"plot/{cat}/{metric}/"):
                 os.makedirs(f"plot/{cat}/{metric}/")
 
-            plt.savefig(f"plot/{cat}/{metric}/{comparison_column}.jpg")
+            plt.savefig(f"plot/{cat}/{metric}/{comparison_column}.pdf")
             plt.clf()
         else:
             plt.show()
