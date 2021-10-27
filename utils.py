@@ -142,7 +142,7 @@ def zx_circuit_to_qiskit_circuit(circuit: zx.Circuit) -> QuantumCircuit:
     :param circuit:
     :return:
     """
-    return QuantumCircuit.from_qasm_str(circuit.to_qasm())
+    return QuantumCircuit.from_qasm_str(circuit.to_basic_gates().to_qasm())
 
 
 def qiskit_circuit_to_zx_circuit(circ: QuantumCircuit) -> zx.Circuit:
