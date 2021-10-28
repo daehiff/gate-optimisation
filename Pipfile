@@ -20,7 +20,7 @@ gmpy2 = "*"
 coverage = "*"
 qfast-uq = "*"
 seaborn = "*"
-mitm-algorithm = {path = "./mitm-reimplementation"}
+#mitm-algorithm = {path = "./mitm-reimplementation"}
 qtoolkit = {path = "./qtoolkit"}
 
 [requires]

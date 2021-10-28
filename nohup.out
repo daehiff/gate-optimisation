@@ -1,0 +1,2 @@
+Sending build context to Docker daemon  38.51MB
+Step 1/35 : FROM ocaml/opam:ubuntu-16.04-ocaml-4.09

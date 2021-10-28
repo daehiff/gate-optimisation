@@ -1,22 +1,30 @@
-FROM ocaml/opam
+FROM ocaml/opam:ubuntu-20.04-ocaml-4.09
 
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 # System wide dependencies gcc, python 3.7, pip and Boost
+RUN sudo apt-get update
+RUN sudo apt-get install software-properties-common -y
+RUN sudo add-apt-repository ppa:deadsnakes/ppa   
 RUN sudo apt-get update
 RUN sudo apt-get install libgmp-dev -y
 RUN sudo apt-get install build-essential  manpages-dev -y
 RUN sudo apt-get install libboost-all-dev -y
-RUN sudo apt-get install python3.7 python3-pip -y
+RUN sudo apt-get install python3.7 python3-pip python3.7-dev libpython3.7-dev -y
+RUN sudo pip3 install --upgrade pip
 RUN sudo apt-get install libmpc-dev -y
 RUN sudo apt-get install cmake -y
 RUN sudo apt-get install libatlas-base-dev -y
-RUN sudo apt-get install python-pybind11 -y
+RUN sudo pip3 install "pybind11[global]" 
 
 # install xtensor + libs
-RUN sudo pip3 install numpy
-RUN git clone "https://github.com/xtensor-stack/xtl.git" && cd xtl && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local && sudo make install && cd ..
-RUN git clone "https://github.com/xtensor-stack/xtensor.git" && cd xtensor && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local && sudo make install && cd ..
-RUN git clone "https://github.com/xtensor-stack/xtensor-blas.git" && cd xtensor-blas && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local && sudo make install && cd ..
-RUN git clone "https://github.com/xtensor-stack/xtensor-python.git" && cd xtensor-python && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local && sudo make install && cd ..
+
+#RUN sudo pip3 install numpy 
+#RUN sudo pip install numpy 
+#RUN git clone "https://github.com/xtensor-stack/xtl.git" && cd xtl && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local && sudo make install && cd ..
+#RUN git clone "https://github.com/xtensor-stack/xtensor.git" && cd xtensor && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local && sudo make install && cd ..
+#RUN git clone "https://github.com/xtensor-stack/xtensor-blas.git" && cd xtensor-blas && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local && sudo make install && cd ..
+#RUN git clone "https://github.com/xtensor-stack/xtensor-python.git" && cd xtensor-python && sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local && sudo make install && cd ..
 
 RUN python3.7 --version
 RUN gcc --version
